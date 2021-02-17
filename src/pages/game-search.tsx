@@ -46,7 +46,7 @@ const GameSearch: FC = () => {
     <Container>
       <h1 className="mt-4 mb-4">Ajouter des jeux</h1>
       <p>
-        Cette page vous permet de rechercher des jeux de société listés sur <a target="_blank" href="https://www.boardgameatlas.com/">Board Game Atlas</a>. Lorsque vous avez trouvé le(s) jeu(x) qui vous intéressent, vous pouvez le(s) sélectionner pour l(es) ajouter au gestionnaire de contenus de l'Antre des jeux.
+        Cette page vous permet de rechercher des jeux de société listés sur <a target="_blank" rel="noreferrer" href="https://www.boardgameatlas.com/">Board Game Atlas</a>. Lorsque vous avez trouvé le(s) jeu(x) qui vous intéressent, vous pouvez le(s) sélectionner pour l(es) ajouter au gestionnaire de contenus de l'Antre des jeux.
       </p>
       <SearchContext.Provider value={contextValue}>
         <SearchForm />
