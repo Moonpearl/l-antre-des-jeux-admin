@@ -1,7 +1,8 @@
 import React, { FC, useContext } from "react";
 import { SearchContext } from "../contexts";
-import { Alert, ListGroup, ListGroupItem, Spinner } from "react-bootstrap";
+import { Alert, ListGroup, Spinner } from "react-bootstrap";
 import { RequestState } from "../enums";
+import BoardGameItem from "./board-game-item";
 
 const SearchResultList: FC = () => {
   const { requestState, results } = useContext(SearchContext);
@@ -35,9 +36,7 @@ const SearchResultList: FC = () => {
             {
               results.games.map(
                 (boardGame, index) =>
-                  <ListGroupItem key={index} action>
-                    {boardGame.name}
-                  </ListGroupItem>
+                  <BoardGameItem key={index} boardGame={boardGame} />
               )
             }
           </ListGroup>
