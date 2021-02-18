@@ -1,4 +1,4 @@
-import BoardGame from "./board-game";
+import { BoardGame } from "./boardgameatlas";
 
 export default interface SearchResults {
   count: number;
