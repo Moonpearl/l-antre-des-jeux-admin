@@ -1,33 +1,16 @@
 import axios from "axios";
-import React, { FC, useState } from "react";
+import React, { FC, useContext, useState } from "react";
 import { ListGroupItem, Button, Spinner } from "react-bootstrap";
+import { SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { BoardGame } from "../interfaces/boardgameatlas";
-
-interface ButtonContentProps {
-  requestState: RequestState;
-}
-
-const ButtonContent: FC<ButtonContentProps> = ({ requestState }) => {
-  switch (requestState) {
-
-    case RequestState.Pending:
-      return <Spinner animation="grow" variant="light" size="sm" />;
-      
-    case RequestState.Success:
-      return <>Ajouté!</>;
-  
-    default:
-      return <>Ajouter</>;
-
-  }
-}
 
 interface BoardGameItemProps {
   boardGame: BoardGame;
 }
 
 const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
+  const { actions } = useContext(SearchContext);
   const [requestState, setRequestState] = useState(RequestState.Idle);
 
   const sendGame = async () => {
@@ -38,16 +21,37 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
     setRequestState(RequestState.Success);
   };
 
+  const alreadyAdded = actions.assetExists('products', boardGame.id);
+
+  const makeButtonContent = () => {
+    if (alreadyAdded) {
+      return 'Déjà ajouté';
+    }
+
+    switch (requestState) {
+
+      case RequestState.Pending:
+        return <Spinner animation="grow" variant="light" size="sm" />;
+        
+      case RequestState.Success:
+        return 'Ajouté!';
+    
+      default:
+        return 'Ajouter';
+  
+    }  
+  };
+
   return (
     <ListGroupItem action>
       <Button
         className="mr-2"
-        variant={requestState === RequestState.Success ? 'secondary' : 'primary'}
-        disabled={requestState !== RequestState.Idle}
+        variant={alreadyAdded ? 'secondary' : 'primary'}
+        disabled={requestState !== RequestState.Idle || alreadyAdded}
         size="sm"
-        onClick={requestState === RequestState.Idle ? sendGame : undefined}
+        onClick={requestState === RequestState.Idle && !alreadyAdded ? sendGame : undefined}
       >
-        <ButtonContent requestState={requestState} />
+        {makeButtonContent()}
       </Button>
       {boardGame.name}
     </ListGroupItem>
