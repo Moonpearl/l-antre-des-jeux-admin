@@ -10,10 +10,6 @@ interface ResourceLoaderProps {
   resource: Resource;
 }
 
-function delay(ms: number) {
-  return new Promise( resolve => setTimeout(resolve, ms) );
-}
-
 enum ResourceLoaderState {
   Idle,
   FetchMissing,
@@ -23,6 +19,7 @@ enum ResourceLoaderState {
 
 const ResourceLoader: FC<ResourceLoaderProps> = ({ resource }) => {
   const [missingAssets, setMissingAssets] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [requestState, setRequestState] = useState<RequestState>(RequestState.Idle);
   const [currentCreatingAsset, setCurrentCreatingAsset] = useState<number>(0);
 
@@ -49,6 +46,7 @@ const ResourceLoader: FC<ResourceLoaderProps> = ({ resource }) => {
       };
       fetchMissing();
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [resource]
   );
 
@@ -70,6 +68,7 @@ const ResourceLoader: FC<ResourceLoaderProps> = ({ resource }) => {
         createMissing();
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [missingAssets]
   );
 
@@ -130,7 +129,7 @@ const loaderStateReducer: Reducer<AllLoaderStates, LoaderStateAction> = (state, 
   const { type, value } = action;
   return {
     ...state,
-    [action.type]: action.value,
+    [type]: value,
   };
 }
 
