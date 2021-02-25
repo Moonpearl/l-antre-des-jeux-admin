@@ -140,7 +140,6 @@ interface LoaderStateAction {
 
 const InitialLoader: FC = ({ children }) => {
   const [allLoaderStates, dispatchLoaderStates] = useReducer<Reducer<AllLoaderStates, LoaderStateAction>>(loaderStateReducer, defaultAllLoaderStates);
-  // const [allLoaderStates, setAllLoaderStates] = useState<AllLoaderStates>(defaultAllLoaderStates);
 
   const setLoaderState = (type: Resource, value: ResourceLoaderState) => {
     dispatchLoaderStates({ type, value });
