@@ -58,10 +58,17 @@ const ResourceLoader: FC<ResourceLoaderProps> = ({ resource }) => {
           for (const index in missingAssets) {
             setCurrentCreatingAsset(Number(index));
             const asset = missingAssets[index];
-            await axios.post(`/.netlify/functions/create-asset?resource=${resource}`, {
-              name: asset.name,
-              boardgameatlasId: asset.id,
-            });
+
+            try {
+              await axios.post(`/.netlify/functions/create-asset?resource=${resource}`, {
+                name: asset.name,
+                slug: asset.name.split(/\W+/).map( (str: string) => str.toLowerCase()).join('-'),
+                boardgameatlasId: asset.id,
+              });
+            }
+            catch (error) {
+              console.error(error);
+            }
           }
           setLoaderState(ResourceLoaderState.Done);
         };

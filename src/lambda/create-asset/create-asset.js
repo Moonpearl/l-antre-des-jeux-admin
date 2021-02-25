@@ -3,10 +3,12 @@ const { GraphQLClient } = require('graphql-request');
 const queries = {
   categories: `mutation CreateCategoryMutation(
     $boardgameatlasId: String,
-    $name: String
+    $name: String,
+    $slug: String
   ) {
     createCategory(data: {
       boardgameatlasId: $boardgameatlasId,
+      slug: $slug
       name: $name
     }) {
       id
@@ -23,9 +25,11 @@ const queries = {
   mechanics: `mutation CreateMechanicMutation(
     $boardgameatlasId: String,
     $name: String
+    $slug: String
   ) {
     createMechanic(data: {
       boardgameatlasId: $boardgameatlasId,
+      slug: $slug
       name: $name
     }) {
       id
