@@ -7,6 +7,9 @@ const queries = {
     $slug: String
   ) {
     createCategory(data: {
+      localizations: {create: {data :{
+        name: $name
+      }, locale: en}},
       boardgameatlasId: $boardgameatlasId,
       slug: $slug
       name: $name

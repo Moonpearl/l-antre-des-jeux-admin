@@ -38,6 +38,7 @@ const handler = async (event) => {
             name: $name,
             description: $description
           }, locale: en}},
+          name: $name,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
           price: $price,
