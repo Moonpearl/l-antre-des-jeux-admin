@@ -31,6 +31,9 @@ const queries = {
     $slug: String
   ) {
     createMechanic(data: {
+      localizations: {create: {data :{
+        name: $name
+      }, locale: en}},
       boardgameatlasId: $boardgameatlasId,
       slug: $slug
       name: $name
