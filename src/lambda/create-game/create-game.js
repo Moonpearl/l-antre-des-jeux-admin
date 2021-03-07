@@ -56,7 +56,7 @@ const handler = async (event) => {
       }`,
       {
         name,
-        slug: handle,
+        slug: handle.split('-').filter(item => item !== '').join('-'),
         boardgameatlasId: id,
         description: turndownService.turndown(description),
         price: Number(price),
