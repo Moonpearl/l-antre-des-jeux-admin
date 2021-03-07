@@ -7,7 +7,7 @@ const handler = async (event) => {
   const turndownService = new TurndownService();
 
   try {
-    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age } = JSON.parse(event.body);
+    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age, mechanics, categories } = JSON.parse(event.body);
 
     const graphcms = new GraphQLClient(
       GRAPHCMS_ENDPOINT,
@@ -30,12 +30,15 @@ const handler = async (event) => {
         $maxPlaytime: Int,
         $minPlayers: Int,
         $maxPlayers: Int,
-        $minAge: Int
+        $minAge: Int,
+        $mechanics: [MechanicWhereUniqueInput!],
+        $categories: [CategoryWhereUniqueInput!]
       ) {
         createProduct(data: {localizations: {create: {data: {
             name: $name,
             description: $description
           }, locale: en}},
+          name: $name,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
           price: $price,
@@ -44,14 +47,16 @@ const handler = async (event) => {
           maxPlaytime: $maxPlaytime,
           minPlayers: $minPlayers,
           maxPlayers: $maxPlayers,
-          minAge: $minAge
+          minAge: $minAge,
+          mechanics: {connect: $mechanics},
+          categories: {connect: $categories}
         }) {
           id
         }
       }`,
       {
         name,
-        slug: handle,
+        slug: handle.split('-').filter(item => item !== '').join('-'),
         boardgameatlasId: id,
         description: turndownService.turndown(description),
         price: Number(price),
@@ -61,6 +66,8 @@ const handler = async (event) => {
         minPlayers: min_players,
         maxPlayers: max_players,
         minAge: min_age,
+        mechanics: mechanics.map(mechanic => ({ boardgameatlasId: mechanic.id })),
+        categories: categories.map(category => ({ boardgameatlasId: category.id })),
       }
     );
 

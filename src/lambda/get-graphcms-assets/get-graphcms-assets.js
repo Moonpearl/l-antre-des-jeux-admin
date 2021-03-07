@@ -14,7 +14,7 @@ const handler = async (event) => {
     );
 
     const data = await graphcms.request(
-      `query MyQuery {
+      `query ProductQuery {
         products(stage: DRAFT) {
           id
           boardgameatlasId

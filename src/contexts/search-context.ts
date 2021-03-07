@@ -18,7 +18,7 @@ interface SearchContextValue {
   };
 }
 
-const SearchContext = createContext<SearchContextValue>({
+const defaultValue: SearchContextValue = {
   requestState: RequestState.Idle,
   params: {
     name: '',
@@ -35,6 +35,8 @@ const SearchContext = createContext<SearchContextValue>({
     setAssets: () => {},
     assetExists: () => false,
   },
-});
+};
+
+const SearchContext = createContext<SearchContextValue>(defaultValue);
 
 export default SearchContext;
