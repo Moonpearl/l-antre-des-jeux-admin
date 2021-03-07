@@ -4,6 +4,7 @@ import { SearchForm, SearchResultList } from "../components";
 import { SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { SearchParams, SearchResults } from "../interfaces";
+import { GraphcmsAllAssets } from "../interfaces/graphcms";
 
 const defaultSearchParams: SearchParams = {
   name: '',
@@ -18,6 +19,7 @@ const GameSearch: FC = () => {
   const [requestState, setRequestState] = useState(RequestState.Idle);
   const [searchParams, setSearchParams] = useState<SearchParams>(defaultSearchParams);
   const [searchResults, setSearchResults] = useState<SearchResults>(defaultSearchResults);
+  const [graphcmsAssets, setGraphcmsAssets] = useState<GraphcmsAllAssets>();
 
   const resetParams = () => {
     setSearchParams(defaultSearchParams);
@@ -30,15 +32,28 @@ const GameSearch: FC = () => {
     });
   };
 
+  const assetExists = (type: keyof GraphcmsAllAssets, boardgameatlasId: string) => {
+    if (typeof graphcmsAssets === 'undefined') {
+      throw new Error('Cannot check for existence of asset before fetchings assets.');
+    }
+
+    return graphcmsAssets[type].some(
+      asset => asset.boardgameatlasId === boardgameatlasId
+    );
+  }
+
   const contextValue = {
     requestState,
     params: searchParams,
     results: searchResults,
+    assets: graphcmsAssets,
     actions: {
       resetParams,
       setParam,
       setResults: (results: SearchResults) => setSearchResults(results),
       setRequestState: (requestState: RequestState) => setRequestState(requestState),
+      setAssets: (assets: GraphcmsAllAssets) => setGraphcmsAssets(assets),
+      assetExists,
     }
   };
 

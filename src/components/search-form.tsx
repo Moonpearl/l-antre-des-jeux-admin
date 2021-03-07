@@ -4,6 +4,7 @@ import { Button, Card, Form } from "react-bootstrap";
 import { SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { SearchParams, SearchResults } from "../interfaces";
+import { GraphcmsAllAssets } from "../interfaces/graphcms";
 
 const SearchForm: FC = () => {
   const { params, actions } = useContext(SearchContext);
@@ -28,9 +29,13 @@ const SearchForm: FC = () => {
     }
 
     actions.setRequestState(RequestState.Pending);
-    const response = await axios.get<SearchResults>(`/.netlify/functions/game-search?name=${params.name}`);
-    actions.setRequestState(RequestState.Success);
+    let response;
+    response = await axios.get<SearchResults>(`/.netlify/functions/game-search?name=${params.name}`);
     actions.setResults(response.data);
+
+    response = await axios.get<GraphcmsAllAssets>(`/.netlify/functions/get-graphcms-assets`);
+    actions.setAssets(response.data);
+    actions.setRequestState(RequestState.Success);
     actions.resetParams();
   };
 
