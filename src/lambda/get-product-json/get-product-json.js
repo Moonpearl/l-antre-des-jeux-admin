@@ -32,6 +32,9 @@ const handler = async (event) => {
 
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         url: `/.netlify/functions/get-product-json?slug=${slug}`,
         id: product.id,
