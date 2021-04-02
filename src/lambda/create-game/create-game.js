@@ -2,7 +2,7 @@ const { GraphQLClient } = require('graphql-request');
 const TurndownService = require('turndown');
 
 const handler = async (event) => {
-  const { GRAPHCMS_ENDPOINT, GRAPHCMS_MUTATION_TOKEN } = process.env;
+  const { GRAPHCMS_ENDPOINT, GRAPHCMS_MUTATION_TOKEN, DEPLOY_URL, SNIPCART_SECRET_API_KEY } = process.env;
 
   const turndownService = new TurndownService();
 
@@ -17,6 +17,8 @@ const handler = async (event) => {
         }
       }
     );
+
+    const slug = handle.split('-').filter(item => item !== '').join('-');
 
     const { createProduct } = await graphcms.request(
       `mutation createGame(
@@ -56,7 +58,7 @@ const handler = async (event) => {
       }`,
       {
         name,
-        slug: handle.split('-').filter(item => item !== '').join('-'),
+        slug,
         boardgameatlasId: id,
         description: turndownService.turndown(description),
         price: Number(price),
@@ -70,6 +72,16 @@ const handler = async (event) => {
         categories: categories.map(category => ({ boardgameatlasId: category.id })),
       }
     );
+
+    await fetch('https://app.snipcart.com/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Basic ${Buffer.from(SNIPCART_SECRET_API_KEY + ':').toString('base64')}`,
+      },
+      body: JSON.stringify({ fetchUrl: `${DEPLOY_URL}/.netlify/functions/get-product-json?slug=${slug}` }),
+    });
 
     return {
       statusCode: 201,
