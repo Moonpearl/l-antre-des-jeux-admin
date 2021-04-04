@@ -41,6 +41,9 @@ const handler = async (event) => {
         name: product.name,
         price: product.price,
         image: product.imageUrl,
+        // TODO Change product ID to EBP ID
+        // TODO Add description
+        // TODO Add stock number
       }),
     };
   }

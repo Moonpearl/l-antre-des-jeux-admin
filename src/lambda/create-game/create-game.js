@@ -1,3 +1,4 @@
+const fetch = require("node-fetch");
 const { GraphQLClient } = require('graphql-request');
 const TurndownService = require('turndown');
 
@@ -7,7 +8,7 @@ const handler = async (event) => {
   const turndownService = new TurndownService();
 
   try {
-    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age, mechanics, categories } = JSON.parse(event.body);
+    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age, mechanics, categories, ebpId } = JSON.parse(event.body);
 
     const graphcms = new GraphQLClient(
       GRAPHCMS_ENDPOINT,
@@ -25,6 +26,7 @@ const handler = async (event) => {
         $name: String,
         $slug: String,
         $boardgameatlasId: String,
+        $ebpId: String,
         $description: String,
         $price: Float,
         $imageUrl: String,
@@ -43,6 +45,7 @@ const handler = async (event) => {
           name: $name,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
+          ebpId: $ebpId,
           price: $price,
           imageUrl: $imageUrl,
           minPlaytime: $minPlaytime,
@@ -60,6 +63,7 @@ const handler = async (event) => {
         name,
         slug,
         boardgameatlasId: id,
+        ebpId,
         description: turndownService.turndown(description),
         price: Number(price),
         imageUrl: image_url,
