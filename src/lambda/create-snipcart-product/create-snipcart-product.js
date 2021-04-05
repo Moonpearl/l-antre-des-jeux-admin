@@ -1,11 +1,11 @@
 const axios = require('axios');
 
 const handler = async (event) => {
+  const { slug } = JSON.parse(event.body);
+
+  const { SNIPCART_SECRET_API_KEY, DEPLOY_URL } = process.env;
+
   try {
-    const { slug } = JSON.parse(event.body);
-
-    const { SNIPCART_SECRET_API_KEY, DEPLOY_URL } = process.env;
-
     const response = await axios({
       method: 'POST',
       url: 'https://app.snipcart.com/api/products',
@@ -23,7 +23,7 @@ const handler = async (event) => {
     };
   }
   catch (error) {
-    return { statusCode: 500, body: error.toString() };
+    return { statusCode: 500, body: JSON.stringify({ DEPLOY_URL, slug, SNIPCART_SECRET_API_KEY }) };
   }
 }
 
