@@ -70,6 +70,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
     await axios.post(`/.netlify/functions/create-snipcart-product`,
       { slug: boardGame.handle.split('-').filter(item => item !== '').join('-') }
     );
+
     setRequestState(RequestState.Success);
   };
 

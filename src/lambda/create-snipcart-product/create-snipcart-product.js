@@ -1,4 +1,4 @@
-const fetch = require("node-fetch");
+const axios = require('axios');
 
 const handler = async (event) => {
   try {
@@ -6,19 +6,20 @@ const handler = async (event) => {
 
     const { SNIPCART_SECRET_API_KEY, DEPLOY_URL } = process.env;
 
-    const result = await fetch('https://app.snipcart.com/api/products', {
+    const response = await axios({
       method: 'POST',
+      url: 'https://app.snipcart.com/api/products',
+      data: { fetchUrl: `${DEPLOY_URL}/.netlify/functions/get-product-json?slug=${slug}` },
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': `Basic ${Buffer.from(SNIPCART_SECRET_API_KEY + ':').toString('base64')}`,
       },
-      body: JSON.stringify({ fetchUrl: `${DEPLOY_URL}/.netlify/functions/get-product-json?slug=${slug}` }),
-    });
+    })
 
     return {
       statusCode: 201,
-      body: JSON.stringify(result),
+      body: JSON.stringify(response.data),
     };
   }
   catch (error) {

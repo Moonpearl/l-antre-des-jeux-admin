@@ -45,6 +45,8 @@ const handler = async (event) => {
         image: product.imageUrl,
         stock: product.lastReportedStock,
         description: product.description,
+        inventoryManagementMethod: 'Single',
+        allowOutOfStockPurchases: false,
       }),
     };
   }
