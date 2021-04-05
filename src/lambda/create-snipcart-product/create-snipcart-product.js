@@ -1,17 +1,15 @@
 const axios = require('axios');
 
-const { DEPLOY_URL } = process.env;
-
 const handler = async (event) => {
   const { slug } = JSON.parse(event.body);
 
-  const { SNIPCART_SECRET_API_KEY } = process.env;
+  const { SNIPCART_SECRET_API_KEY, SITE_URL } = process.env;
 
   try {
     const response = await axios({
       method: 'POST',
       url: 'https://app.snipcart.com/api/products',
-      data: { fetchUrl: `${DEPLOY_URL}/.netlify/functions/get-product-json?slug=${slug}` },
+      data: { fetchUrl: `${SITE_URL}/.netlify/functions/get-product-json?slug=${slug}` },
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -25,7 +23,7 @@ const handler = async (event) => {
     };
   }
   catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ DEPLOY_URL, slug, SNIPCART_SECRET_API_KEY }) };
+    return { statusCode: 500, body: JSON.stringify(error) };
   }
 }
 
