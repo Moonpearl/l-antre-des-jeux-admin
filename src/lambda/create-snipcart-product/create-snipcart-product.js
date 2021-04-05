@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const DEPLOY_URL = process.env;
+const { DEPLOY_URL } = process.env;
 
 const handler = async (event) => {
   const { slug } = JSON.parse(event.body);
