@@ -1,14 +1,30 @@
-const fetch = require("node-fetch");
 const { GraphQLClient } = require('graphql-request');
 const TurndownService = require('turndown');
 
 const handler = async (event) => {
-  const { GRAPHCMS_ENDPOINT, GRAPHCMS_MUTATION_TOKEN, DEPLOY_URL, SNIPCART_SECRET_API_KEY } = process.env;
+  const { GRAPHCMS_ENDPOINT, GRAPHCMS_MUTATION_TOKEN } = process.env;
 
   const turndownService = new TurndownService();
 
   try {
-    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age, mechanics, categories, ebpId } = JSON.parse(event.body);
+    const {
+      id,
+      name,
+      description,
+      price,
+      handle,
+      image_url,
+      min_players,
+      max_players,
+      min_playtime,
+      max_playtime,
+      min_age,
+      mechanics,
+      categories,
+      ebpId,
+      ebpName,
+      stock,
+    } = JSON.parse(event.body);
 
     const graphcms = new GraphQLClient(
       GRAPHCMS_ENDPOINT,
@@ -23,10 +39,12 @@ const handler = async (event) => {
 
     const { createProduct } = await graphcms.request(
       `mutation createGame(
+        $stock: Int,
+        $ebpName: String,
         $name: String,
-        $slug: String,
+        $slug: String!,
         $boardgameatlasId: String,
-        $ebpId: String,
+        $ebpId: String!,
         $description: String,
         $price: Float,
         $imageUrl: String,
@@ -42,7 +60,8 @@ const handler = async (event) => {
             name: $name,
             description: $description
           }, locale: en}},
-          name: $name,
+          lastReportedStock: $stock,
+          name: $ebpName,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
           ebpId: $ebpId,
@@ -64,6 +83,8 @@ const handler = async (event) => {
         slug,
         boardgameatlasId: id,
         ebpId,
+        ebpName,
+        stock,
         description: turndownService.turndown(description),
         price: Number(price),
         imageUrl: image_url,
@@ -76,16 +97,6 @@ const handler = async (event) => {
         categories: categories.map(category => ({ boardgameatlasId: category.id })),
       }
     );
-
-    await fetch('https://app.snipcart.com/api/products', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Basic ${Buffer.from(SNIPCART_SECRET_API_KEY + ':').toString('base64')}`,
-      },
-      body: JSON.stringify({ fetchUrl: `${DEPLOY_URL}/.netlify/functions/get-product-json?slug=${slug}` }),
-    });
 
     return {
       statusCode: 201,

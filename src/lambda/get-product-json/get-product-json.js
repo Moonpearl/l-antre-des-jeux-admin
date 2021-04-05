@@ -19,10 +19,12 @@ const handler = async (event) => {
         $slug: String!
       ) {
         product(where: {slug: $slug}, stage: DRAFT) {
-          id
+          ebpId
           name
           price
           imageUrl
+          lastReportedStock
+          description
         }
       }`,
       {
@@ -37,13 +39,12 @@ const handler = async (event) => {
       },
       body: JSON.stringify({
         url: `/.netlify/functions/get-product-json?slug=${slug}`,
-        id: product.id,
+        id: product.ebpId,
         name: product.name,
         price: product.price,
         image: product.imageUrl,
-        // TODO Change product ID to EBP ID
-        // TODO Add description
-        // TODO Add stock number
+        stock: product.lastReportedStock,
+        description: product.description,
       }),
     };
   }
