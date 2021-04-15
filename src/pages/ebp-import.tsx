@@ -3,8 +3,32 @@ import { Alert, Button, Container, Form, Spinner } from "react-bootstrap";
 import { EbpContext } from "../contexts";
 import { RequestState } from "../enums";
 
+const CurrentlyUpdatingAlert: FC = () => {
+  const { updateStocks, stockUpdateState, findById } = useContext(EbpContext);
+
+  if (!updateStocks || typeof stockUpdateState === 'undefined') {
+    return null;
+  }
+
+  const currentProduct = findById(stockUpdateState.currentId);
+
+  let message;
+  if (typeof currentProduct === 'undefined') {
+    message = 'Préparation de la mise à jour des stocks…';
+  } else {
+    message = `(${stockUpdateState.processedCount + 1}/${stockUpdateState.totalCount}) Mise à jour des stocks pour [${currentProduct.ebpId}] "${currentProduct.name}"`;
+  }
+
+  return (
+    <Alert variant="info">
+      <Spinner size="sm" animation="border" variant="info" />&nbsp;
+      {message}
+    </Alert>
+  );
+}
+
 const EbpImport: FC = () => {
-  const { uploadEbpExport, requestState, products } = useContext(EbpContext);
+  const { uploadEbpExport, requestState, products, updateStocks, setUpdateStocks } = useContext(EbpContext);
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = event => {
@@ -75,9 +99,20 @@ const EbpImport: FC = () => {
             custom
           />
         </Form.Group>
+        <Form.Group>
+          <Form.Check
+            custom
+            type="checkbox"
+            id="update-stocks"
+            label="Mettre à jour les stocks de tous les produits actuellement enregistrés dans Snipcart"
+            checked={updateStocks}
+            onChange={event => setUpdateStocks(event.target.checked)}
+          />
+        </Form.Group>
         <Button type="submit" disabled={currentFile === null}>Envoyer</Button>
       </Form>
       {makeAlert()}
+      <CurrentlyUpdatingAlert />
     </Container>
   );
 }
