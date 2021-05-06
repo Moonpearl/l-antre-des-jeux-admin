@@ -1,7 +1,7 @@
-import React, { FC, useState } from "react";
+import React, { FC, useContext, useState } from "react";
 import { Container } from "react-bootstrap";
 import { SearchForm, SearchResultList } from "../components";
-import { SearchContext } from "../contexts";
+import { EbpContext, SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { SearchParams, SearchResults } from "../interfaces";
 import { GraphcmsAllAssets } from "../interfaces/graphcms";
@@ -16,10 +16,16 @@ const defaultSearchResults: SearchResults = {
 };
 
 const GameSearch: FC = () => {
+  const { requestState: ebpImportRequestState } = useContext(EbpContext);
+
   const [requestState, setRequestState] = useState(RequestState.Idle);
   const [searchParams, setSearchParams] = useState<SearchParams>(defaultSearchParams);
   const [searchResults, setSearchResults] = useState<SearchResults>(defaultSearchResults);
   const [graphcmsAssets, setGraphcmsAssets] = useState<GraphcmsAllAssets>();
+
+  if (ebpImportRequestState !== RequestState.Success) {
+    return null;
+  }
 
   const resetParams = () => {
     setSearchParams(defaultSearchParams);

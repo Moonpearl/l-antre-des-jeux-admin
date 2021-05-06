@@ -7,7 +7,24 @@ const handler = async (event) => {
   const turndownService = new TurndownService();
 
   try {
-    const { id, name, description, price, handle, image_url, min_players, max_players, min_playtime, max_playtime, min_age, mechanics, categories } = JSON.parse(event.body);
+    const {
+      id,
+      name,
+      description,
+      price,
+      handle,
+      image_url,
+      min_players,
+      max_players,
+      min_playtime,
+      max_playtime,
+      min_age,
+      mechanics,
+      categories,
+      ebpId,
+      ebpName,
+      stock,
+    } = JSON.parse(event.body);
 
     const graphcms = new GraphQLClient(
       GRAPHCMS_ENDPOINT,
@@ -18,11 +35,16 @@ const handler = async (event) => {
       }
     );
 
+    const slug = handle.split('-').filter(item => item !== '').join('-');
+
     const { createProduct } = await graphcms.request(
       `mutation createGame(
+        $stock: Int,
+        $ebpName: String,
         $name: String,
-        $slug: String,
+        $slug: String!,
         $boardgameatlasId: String,
+        $ebpId: String!,
         $description: String,
         $price: Float,
         $imageUrl: String,
@@ -38,9 +60,11 @@ const handler = async (event) => {
             name: $name,
             description: $description
           }, locale: en}},
-          name: $name,
+          lastReportedStock: $stock,
+          name: $ebpName,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
+          ebpId: $ebpId,
           price: $price,
           imageUrl: $imageUrl,
           minPlaytime: $minPlaytime,
@@ -56,8 +80,11 @@ const handler = async (event) => {
       }`,
       {
         name,
-        slug: handle.split('-').filter(item => item !== '').join('-'),
+        slug,
         boardgameatlasId: id,
+        ebpId,
+        ebpName,
+        stock,
         description: turndownService.turndown(description),
         price: Number(price),
         imageUrl: image_url,
