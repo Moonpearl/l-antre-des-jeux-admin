@@ -6,6 +6,7 @@ import { RequestState } from "../enums";
 import { BoardGame } from "../interfaces/boardgameatlas";
 import { EbpProduct } from "../interfaces/ebp";
 
+
 interface BoardGameItemProps {
   boardGame: BoardGame;
 }
