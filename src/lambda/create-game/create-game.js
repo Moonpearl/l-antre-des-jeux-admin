@@ -8,22 +8,22 @@ const handler = async (event) => {
 
   try {
     const {
-      id,
+      boardgameatlasId,
+      slug,
       name,
       description,
       price,
-      handle,
-      image_url,
-      min_players,
-      max_players,
-      min_playtime,
-      max_playtime,
-      min_age,
+      imageUrl,
+      minPlayers,
+      maxPlayers,
+      minPlaytime,
+      maxPlaytime,
+      minAge,
+      lastReportedStock,
       mechanics,
       categories,
       ebpId,
       ebpName,
-      stock,
       shelf,
     } = JSON.parse(event.body);
 
@@ -36,11 +36,8 @@ const handler = async (event) => {
       }
     );
 
-    const slug = handle.split('-').filter(item => item !== '').join('-');
-
     const { createProduct } = await graphcms.request(
       `mutation createGame(
-        $stock: Int,
         $ebpName: String,
         $name: String,
         $slug: String!,
@@ -54,6 +51,7 @@ const handler = async (event) => {
         $minPlayers: Int,
         $maxPlayers: Int,
         $minAge: Int,
+        $lastReportedStock: Int,
         $mechanics: [MechanicWhereUniqueInput!],
         $categories: [CategoryWhereUniqueInput!],
         $shelf: ShelfWhereUniqueInput!
@@ -62,7 +60,6 @@ const handler = async (event) => {
             name: $name,
             description: $description
           }, locale: en}},
-          lastReportedStock: $stock,
           name: $ebpName,
           slug: $slug,
           boardgameatlasId: $boardgameatlasId,
@@ -74,6 +71,7 @@ const handler = async (event) => {
           minPlayers: $minPlayers,
           maxPlayers: $maxPlayers,
           minAge: $minAge,
+          lastReportedStock: $lastReportedStock,
           mechanics: {connect: $mechanics},
           categories: {connect: $categories},
           shelf: {connect: $shelf}
@@ -84,18 +82,18 @@ const handler = async (event) => {
       {
         name,
         slug,
-        boardgameatlasId: id,
+        boardgameatlasId,
         ebpId,
         ebpName,
-        stock,
         description: turndownService.turndown(description),
         price: Number(price),
-        imageUrl: image_url,
-        minPlaytime: min_playtime,
-        maxPlaytime: max_playtime,
-        minPlayers: min_players,
-        maxPlayers: max_players,
-        minAge: min_age,
+        imageUrl,
+        minPlayers,
+        maxPlayers,
+        minPlaytime,
+        maxPlaytime,
+        minAge,
+        lastReportedStock,
         mechanics: mechanics.map(mechanic => ({ boardgameatlasId: mechanic.id })),
         categories: categories.map(category => ({ boardgameatlasId: category.id })),
         shelf: { id: shelf.id },
