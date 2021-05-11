@@ -24,6 +24,7 @@ const handler = async (event) => {
       ebpId,
       ebpName,
       stock,
+      shelf,
     } = JSON.parse(event.body);
 
     const graphcms = new GraphQLClient(
@@ -54,7 +55,8 @@ const handler = async (event) => {
         $maxPlayers: Int,
         $minAge: Int,
         $mechanics: [MechanicWhereUniqueInput!],
-        $categories: [CategoryWhereUniqueInput!]
+        $categories: [CategoryWhereUniqueInput!],
+        $shelf: ShelfWhereUniqueInput!
       ) {
         createProduct(data: {localizations: {create: {data: {
             name: $name,
@@ -73,7 +75,8 @@ const handler = async (event) => {
           maxPlayers: $maxPlayers,
           minAge: $minAge,
           mechanics: {connect: $mechanics},
-          categories: {connect: $categories}
+          categories: {connect: $categories},
+          shelf: {connect: $shelf}
         }) {
           id
         }
@@ -95,6 +98,7 @@ const handler = async (event) => {
         minAge: min_age,
         mechanics: mechanics.map(mechanic => ({ boardgameatlasId: mechanic.id })),
         categories: categories.map(category => ({ boardgameatlasId: category.id })),
+        shelf: { id: shelf.id },
       }
     );
 

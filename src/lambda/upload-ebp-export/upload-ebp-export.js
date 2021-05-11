@@ -5,8 +5,6 @@ const { StringDecoder } = require('string_decoder');
 const parsePrice = price => price ? Number(price.replace(',', '.')) : 0;
 
 const handler = async (event) => {
-  const parser = require('lambda-multipart-parser');
-
   const { files } = await parser.parse(event);
   const file = files[0];
 

@@ -2,9 +2,11 @@ import axios from "axios";
 import React, { ChangeEventHandler, FC, useContext, useEffect, useState } from "react";
 import { ListGroupItem, Button, Spinner, Form, Col } from "react-bootstrap";
 import { EbpContext, SearchContext } from "../contexts";
+import GraphcmsContext from "../contexts/graphcms-context";
 import { RequestState } from "../enums";
 import { BoardGame } from "../interfaces/boardgameatlas";
 import { EbpProduct } from "../interfaces/ebp";
+import { GraphcmsShelf } from "../interfaces/graphcms";
 
 
 interface BoardGameItemProps {
@@ -14,11 +16,13 @@ interface BoardGameItemProps {
 const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
   const { findById } = useContext(EbpContext);
   const { actions } = useContext(SearchContext);
+  const { shelves } = useContext(GraphcmsContext);
   const [requestState, setRequestState] = useState(RequestState.Idle);
   const [ebpId, setEbpId] = useState('');
   const [ebpProduct, setEbpProduct] = useState<EbpProduct | undefined>();
   const [isValid, setIsValid] = useState<boolean | undefined>();
   const [submitted, setSubmitted] = useState(false);
+  const [shelf, setShelf] = useState<GraphcmsShelf>();
 
   useEffect(
     () => {
@@ -51,9 +55,15 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
     setSubmitted(false);
   };
 
+  const handleShelfChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    setShelf(
+      shelves.find( shelf => shelf.id === event.target.value )
+    );
+  };
+
   const sendGame = async () => {
     setSubmitted(true);
-    if (!isValid) {
+    if (!isValid || typeof shelf === 'undefined') {
       return;
     }
 
@@ -64,6 +74,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
       ebpName: ebpProduct?.name,
       price: ebpProduct?.price,
       stock: ebpProduct?.stock,
+      shelf,
     };
     await axios.post(`/.netlify/functions/create-game`,
       payload
@@ -110,6 +121,22 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
             isValid={isValid}
             isInvalid={isValid === false}
           />
+        </Col>
+        <Col sm="3">
+          <Form.Control
+            as="select"
+            custom
+            size="sm"
+            disabled={alreadyAdded}
+            value={shelf?.id || ''}
+            onChange={handleShelfChange}
+            isInvalid={submitted && typeof shelf === 'undefined'}
+          >
+            <option value="">Choisissez un rayon…</option>
+            {shelves.map( ({ id, name }) =>
+              <option value={id}>{name}</option>
+            )}
+          </Form.Control>
         </Col>
         <Button
           className="mr-2"
