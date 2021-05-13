@@ -1,5 +1,5 @@
 import React, { FC, useContext } from "react";
-import { ListGroupItem, Button, Spinner, Form, Col } from "react-bootstrap";
+import { ListGroup, Button, Spinner, Form, Col } from "react-bootstrap";
 import { GraphcmsContext, SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { useNewProduct } from "../hooks";
@@ -83,7 +83,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
   };
 
   return (
-    <ListGroupItem action>
+    <ListGroup.Item action as="li">
       <Form.Group className="d-flex flex-wrap mb-0">
         <Col sm="3">
           <Form.Control 
@@ -109,7 +109,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
           >
             <option value="">Choisissez un rayon…</option>
             {shelves.map( ({ id, name }) =>
-              <option value={id}>{name}</option>
+              <option key={id} value={id}>{name}</option>
             )}
           </Form.Control>
         </Col>
@@ -126,7 +126,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
           {boardGame.name}
         </span>
       </Form.Group>
-    </ListGroupItem>
+    </ListGroup.Item>
   );
 }
 
