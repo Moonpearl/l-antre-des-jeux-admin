@@ -60,7 +60,7 @@ const handler = async (event) => {
             allowOutOfStockPurchases: true,
           }
         ],
-        customField: productVariants.length === 0 ? undefined : [
+        customFields: productVariants.length === 0 ? undefined : [
           {
             name: 'Variante',
             options: productVariants.map(
