@@ -2,6 +2,7 @@ import React, { FC, useContext } from "react";
 import { Card, Container } from "react-bootstrap";
 import { GameAddForm } from "../components";
 import { EbpContext } from "../contexts";
+import { ProductContextProvider } from "../contexts/product-context";
 import { RequestState } from "../enums";
 
 const GameAdd: FC = () => {
@@ -16,7 +17,9 @@ const GameAdd: FC = () => {
       <h1 className="mt-4 mb-4">Ajouter des produits</h1>
       <Card>
         <Card.Body>
-          <GameAddForm />
+          <ProductContextProvider>
+            <GameAddForm />
+          </ProductContextProvider>
         </Card.Body>
       </Card>
     </Container>

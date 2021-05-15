@@ -22,6 +22,7 @@ const handler = async (event) => {
       lastReportedStock,
       mechanics,
       categories,
+      variants,
       ebpId,
       ebpName,
       shelf,
@@ -54,6 +55,7 @@ const handler = async (event) => {
         $lastReportedStock: Int,
         $mechanics: [MechanicWhereUniqueInput!],
         $categories: [CategoryWhereUniqueInput!],
+        $variants: [ProductVariantCreateInput!],
         $shelf: ShelfWhereUniqueInput!
       ) {
         createProduct(data: {localizations: {create: {data: {
@@ -74,6 +76,7 @@ const handler = async (event) => {
           lastReportedStock: $lastReportedStock,
           mechanics: {connect: $mechanics},
           categories: {connect: $categories},
+          productVariants: {create: $variants},
           shelf: {connect: $shelf}
         }) {
           id
@@ -96,6 +99,7 @@ const handler = async (event) => {
         lastReportedStock,
         mechanics: mechanics.map(mechanic => ({ boardgameatlasId: mechanic.id })),
         categories: categories.map(category => ({ boardgameatlasId: category.id })),
+        variants: variants.map(({ name, priceModifier }) => ({ name, priceModifier })),
         shelf: { id: shelf.id },
       }
     );

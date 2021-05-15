@@ -1,6 +1,7 @@
-import { Mechanic } from '../boardgameatlas';
+import { Mechanic, Category } from '../boardgameatlas';
 import Asset from './asset';
 import Shelf from './shelf';
+import Variant from './variant';
 
 export default interface Product extends Asset {
   ebpId: string;
@@ -16,6 +17,7 @@ export default interface Product extends Asset {
   minAge?: number;
   lastReportedStock: number;
   shelf?: Shelf;
-  mechanics: Mechanic[];
-  categories: Category[];
+  mechanics?: Mechanic[];
+  categories?: Category[];
+  variants?: Variant[];
 }

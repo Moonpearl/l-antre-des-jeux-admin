@@ -53,6 +53,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
         minAge,
         mechanics,
         categories,
+        variants: [],
         slug,
         ebpId: ebpProduct.ebpId,
         ebpName: ebpProduct.name,

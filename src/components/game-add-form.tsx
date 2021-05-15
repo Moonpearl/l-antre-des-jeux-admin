@@ -1,15 +1,18 @@
-import React, { FC, useContext, useReducer } from "react";
-import { Button, Card, Form, Table } from "react-bootstrap";
-import { GraphcmsContext } from "../contexts";
+import React, { FC, FormEvent, useContext, useState } from "react";
+import { Button, Card, Form, Spinner, Table } from "react-bootstrap";
+import { EbpContext, GraphcmsContext } from "../contexts";
+import ProductContext, { ProductReducerType } from "../contexts/product-context";
+import { RequestState } from "../enums";
 import { GraphcmsVariant } from "../interfaces/graphcms";
-import createCollectionReducer, { UseCollectionType, UseCollectionAction } from "../reducers/create-collection-reducer";
+import { UseCollectionType } from "../reducers/create-collection-reducer";
 
 interface VariantItemProps {
   variant: GraphcmsVariant;
-  mutateVariants: React.Dispatch<UseCollectionAction<GraphcmsVariant>>;
 }
 
-const VariantItem: FC<VariantItemProps> = ({ variant, mutateVariants }) => {
+const VariantItem: FC<VariantItemProps> = ({ variant }) => {
+  const { actions } = useContext(ProductContext);
+
   return (
     <tr>
       <td>
@@ -18,7 +21,7 @@ const VariantItem: FC<VariantItemProps> = ({ variant, mutateVariants }) => {
           placeholder="Nom de la variante"
           size="sm"
           value={variant.name}
-          onChange={event => mutateVariants({
+          onChange={event => actions.mutateVariants({
             type: UseCollectionType.Modify,
             payload: { ...variant, name: event.target.value }
           })}
@@ -30,7 +33,7 @@ const VariantItem: FC<VariantItemProps> = ({ variant, mutateVariants }) => {
           size="sm"
           step={0.01}
           value={variant.priceModifier}
-          onChange={event => mutateVariants({
+          onChange={event => actions.mutateVariants({
             type: UseCollectionType.Modify,
             payload: { ...variant, priceModifier: Number(event.target.value) }
           })}
@@ -40,7 +43,7 @@ const VariantItem: FC<VariantItemProps> = ({ variant, mutateVariants }) => {
         <Button
           variant="danger"
           size="sm"
-          onClick={() => mutateVariants({
+          onClick={() => actions.mutateVariants({
             type: UseCollectionType.Remove,
             payload: variant
           })}
@@ -53,28 +56,113 @@ const VariantItem: FC<VariantItemProps> = ({ variant, mutateVariants }) => {
 }
 
 const GameAddForm: FC = () => {
+  const { findById } = useContext(EbpContext);
   const { shelves } = useContext(GraphcmsContext);
-  const [variants, mutateVariants] = useReducer(createCollectionReducer<GraphcmsVariant>(), []);
+  const { states, actions, assertors } = useContext(ProductContext);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setIsSubmitted(true);
+
+    try {
+      const ebpProduct = findById(states.product.ebpId);
+
+      await actions.createProduct({
+        ...states.product,
+        ebpId: ebpProduct?.ebpId || '',
+        ebpName: ebpProduct?.name || '',
+        price: ebpProduct?.price || 0,
+        lastReportedStock: ebpProduct?.stock || 0,
+        slug: states.product.name.toLowerCase().split(/\W/).filter(item => item !== '').join('-'),
+        variants: states.variants,
+        mechanics: [],
+        categories: [],
+      });
+
+      actions.mutateProduct({ type: ProductReducerType.Reset, payload: undefined });
+      actions.setRequestState(RequestState.Idle);
+      setIsSubmitted(false);
+    }
+    catch (error) {
+      actions.setRequestState(RequestState.Failed);
+      console.error(error);
+    }
+  }
+
+  const makeButtonContent = () => {
+    switch (states.requestState) {
+
+      case RequestState.Pending:
+        return <><Spinner animation="grow" variant="light" size="sm" /> Ajout en cours…</>;
+        
+      case RequestState.Success:
+        return 'Ajouté!';
+    
+      case RequestState.Failed:
+        return 'Erreur lors de l\'ajout';
+    
+      default:
+        return 'Ajouter';
+  
+    }  
+  };
 
   return (
-    <Form>
+    <Form onSubmit={handleSubmit}>
       <h2>Nouveau produit</h2>
+
+      {/* EBP id input */}
       <Form.Group controlId="ebpId">
-        <Form.Control type="text" placeholder="Identifiant EBP" />
+        <Form.Control
+          type="text"
+          placeholder="Identifiant EBP"
+          isValid={(isSubmitted || states.product.ebpId !== '') && assertors.isPropertyValid('ebpId')}
+          isInvalid={(isSubmitted || states.product.ebpId !== '') && !assertors.isPropertyValid('ebpId')}
+          value={states.product.ebpId}
+          onChange={(event) => actions.mutateProduct({ type: ProductReducerType.SetProperties, payload: { ebpId: event.target.value.toUpperCase() } })}
+        />
         <Form.Text className="text-muted">
           Identifiant du nouveau produit dans le logiciel EBP (obligatoire).
         </Form.Text>
       </Form.Group>
+
+      {/* Product name input */}
       <Form.Group controlId="productName">
-        <Form.Control type="text" placeholder="Nom du produit" />
+        <Form.Control
+          type="text"
+          placeholder="Nom du produit"
+          isInvalid={isSubmitted && !assertors.isPropertyValid('name')}
+          value={states.product.name}
+          onChange={(event) => actions.mutateProduct({ type: ProductReducerType.SetProperties, payload: { name: event.target.value } })}
+        />
         <Form.Text className="text-muted">
           Nom du nouveau produit à afficher sur le site (obligatoire).
         </Form.Text>
       </Form.Group>
+
+      {/* Product description input */}
+      <Form.Group controlId="productDescription">
+        <Form.Control
+          as="textarea"
+          rows={4}
+          placeholder="Description du produit"
+          value={states.product.description}
+          onChange={(event) => actions.mutateProduct({ type: ProductReducerType.SetProperties, payload: { description: event.target.value } })}
+        />
+        <Form.Text className="text-muted">
+          Description du nouveau produit à afficher sur le site.
+        </Form.Text>
+      </Form.Group>
+
+      {/* Product shelf selector */}
       <Form.Group controlId="productShelf">
         <Form.Control
           as="select"
           custom
+          isInvalid={isSubmitted && !assertors.isPropertyValid('shelf')}
+          value={states.product.shelf?.id || ''}
+          onChange={(event) => actions.mutateProduct({ type: ProductReducerType.SetProperties, payload: { shelf: shelves.find(shelf => shelf.id === event.target.value) } })}
         >
           <option value="">Choisissez un rayon…</option>
           {shelves.map( ({ id, name }) =>
@@ -85,11 +173,13 @@ const GameAddForm: FC = () => {
           Rayon dans lequel on trouvera le nouveau produit (obligatoire).
         </Form.Text>
       </Form.Group>
+
+      {/* Variants form */}
       <Form.Group>
         <Card>
           <Card.Body>
             <h2>Variantes</h2>
-            {variants.length === 0 ?
+            {states.variants.length === 0 ?
               <Form.Text className="text-muted mb-2">
                 Aucune variante pour ce produit.
               </Form.Text>
@@ -104,9 +194,9 @@ const GameAddForm: FC = () => {
                 </thead>
                 <tbody>
                   {
-                    variants.sort( (v1, v2) => Number(v1.id) - Number(v2.id)).map(
+                    states.variants.sort( (v1, v2) => Number(v1.id) - Number(v2.id)).map(
                       variant =>
-                        <VariantItem key={variant.id} variant={variant} mutateVariants={mutateVariants} />
+                        <VariantItem key={variant.id} variant={variant} />
                     )                
                   }
                 </tbody>
@@ -115,7 +205,7 @@ const GameAddForm: FC = () => {
             <Button
               variant="success"
               size="sm"
-              onClick={() => mutateVariants({
+              onClick={() => actions.mutateVariants({
                 type: UseCollectionType.Add,
                 payload: { id: String(new Date().getTime()), slug: '', name: '', priceModifier: 0 }
               })}
@@ -125,10 +215,14 @@ const GameAddForm: FC = () => {
           </Card.Body>
         </Card>
       </Form.Group>
+
+      {/* Submit button */}
       <Button
-        variant="primary"
+        variant={states.requestState === RequestState.Failed ? 'danger' : 'primary'}
+        type="submit"
+        disabled={states.requestState === RequestState.Pending}
       >
-        Ajouter le produit
+        {makeButtonContent()}
       </Button>
     </Form>
   );

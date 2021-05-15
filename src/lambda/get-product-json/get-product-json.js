@@ -25,12 +25,18 @@ const handler = async (event) => {
           imageUrl
           lastReportedStock
           description
+          productVariants {
+            name
+            priceModifier
+          }
         }
       }`,
       {
         slug
       }
     );
+
+    const { productVariants } = product;
 
     return {
       statusCode: 200,
@@ -41,12 +47,28 @@ const handler = async (event) => {
         url: `/.netlify/functions/get-product-json?slug=${slug}`,
         id: product.ebpId,
         name: product.name,
-        price: product.price,
+        price: productVariants.length === 0 ? product.price : undefined,
         image: product.imageUrl,
         stock: product.lastReportedStock,
         description: product.description,
-        inventoryManagementMethod: 'Single',
-        allowOutOfStockPurchases: false,
+        inventoryManagementMethod: productVariants.length === 0 ? 'Single' : 'Variant',
+        allowOutOfStockPurchases: productVariants.length === 0 ? false : undefined,
+        variants: productVariants.length === 0 ? undefined : [
+          {
+            variation: productVariants.map(variant => ({ name: 'Variante', option: variant.name })),
+            stock: product.lastReportedStock,
+            allowOutOfStockPurchases: true,
+          }
+        ],
+        customField: productVariants.length === 0 ? undefined : [
+          {
+            name: 'Variante',
+            options: productVariants.map(
+              variant => `${variant.name}${variant.priceModifier !== 0 ? `[${variant.priceModifier}]` : ''}`
+            ).join('|'),
+            type: 'dropdown'
+          }
+        ]
       }),
     };
   }
