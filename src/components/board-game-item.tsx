@@ -1,12 +1,9 @@
-import axios from "axios";
-import React, { ChangeEventHandler, FC, useContext, useEffect, useState } from "react";
-import { ListGroupItem, Button, Spinner, Form, Col } from "react-bootstrap";
-import { EbpContext, SearchContext } from "../contexts";
-import GraphcmsContext from "../contexts/graphcms-context";
+import React, { FC, useContext } from "react";
+import { ListGroup, Button, Spinner, Form, Col } from "react-bootstrap";
+import { GraphcmsContext, SearchContext } from "../contexts";
 import { RequestState } from "../enums";
+import { useNewProduct } from "../hooks";
 import { BoardGame } from "../interfaces/boardgameatlas";
-import { EbpProduct } from "../interfaces/ebp";
-import { GraphcmsShelf } from "../interfaces/graphcms";
 
 
 interface BoardGameItemProps {
@@ -14,86 +11,65 @@ interface BoardGameItemProps {
 }
 
 const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
-  const { findById } = useContext(EbpContext);
-  const { actions } = useContext(SearchContext);
   const { shelves } = useContext(GraphcmsContext);
-  const [requestState, setRequestState] = useState(RequestState.Idle);
-  const [ebpId, setEbpId] = useState('');
-  const [ebpProduct, setEbpProduct] = useState<EbpProduct | undefined>();
-  const [isValid, setIsValid] = useState<boolean | undefined>();
-  const [submitted, setSubmitted] = useState(false);
-  const [shelf, setShelf] = useState<GraphcmsShelf>();
+  const searchContext = useContext(SearchContext);
+  const newProductHook = useNewProduct();
 
-  useEffect(
-    () => {
-      if (ebpId === '') {
-        if (submitted) {
-          setIsValid(false);
-        } else {
-          setIsValid(undefined);
-        }
-        setEbpProduct(undefined);
-      } else {
-        const product = findById(ebpId);
-    
-        if (typeof product === 'undefined') {
-          setIsValid(false);
-        } else {
-          setIsValid(true);
-        }
-  
-        setEbpProduct(product);
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ebpId, submitted]
-  );
+  const alreadyAdded = searchContext.actions.assetExists('products', boardGame.id);
 
-  const handleEbpIdChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    const newValue = event.target.value.toUpperCase();
-    setEbpId(newValue);
-    setSubmitted(false);
-  };
+  const handleAddButtonClick = () => {
+    const { ebpProduct, shelf } = newProductHook.states;
 
-  const handleShelfChange: ChangeEventHandler<HTMLInputElement> = (event) => {
-    setShelf(
-      shelves.find( shelf => shelf.id === event.target.value )
-    );
-  };
+    if (newProductHook.states.requestState === RequestState.Idle && !alreadyAdded) {
+      if (typeof ebpProduct === 'undefined') return;
 
-  const sendGame = async () => {
-    setSubmitted(true);
-    if (!isValid || typeof shelf === 'undefined') {
-      return;
+      const {
+        id: boardgameatlasId,
+        name,
+        description,
+        handle,
+        image_url: imageUrl,
+        min_players: minPlayers,
+        max_players: maxPlayers,
+        min_playtime: minPlaytime,
+        max_playtime: maxPlaytime,
+        min_age: minAge,
+        mechanics,
+        categories,
+      } = boardGame;
+
+      const slug = handle.split('-').filter(item => item !== '').join('-');
+
+      newProductHook.eventHandlers.createProduct({
+        id: '',
+        boardgameatlasId,
+        name,
+        description,
+        imageUrl,
+        minPlayers,
+        maxPlayers,
+        minPlaytime,
+        maxPlaytime,
+        minAge,
+        mechanics,
+        categories,
+        variants: [],
+        slug,
+        ebpId: ebpProduct.ebpId,
+        ebpName: ebpProduct.name,
+        price: ebpProduct.price,
+        lastReportedStock: ebpProduct.stock,
+        shelf,
+      });
     }
-
-    setRequestState(RequestState.Pending);
-    const payload = {
-      ...boardGame,
-      ebpId: ebpProduct?.ebpId,
-      ebpName: ebpProduct?.name,
-      price: ebpProduct?.price,
-      stock: ebpProduct?.stock,
-      shelf,
-    };
-    await axios.post(`/.netlify/functions/create-game`,
-      payload
-    );
-    await axios.post(`/.netlify/functions/create-snipcart-product`,
-      { slug: boardGame.handle.split('-').filter(item => item !== '').join('-') }
-    );
-
-    setRequestState(RequestState.Success);
-  };
-
-  const alreadyAdded = actions.assetExists('products', boardGame.id);
+  }
 
   const makeButtonContent = () => {
     if (alreadyAdded) {
       return 'Déjà ajouté';
     }
 
-    switch (requestState) {
+    switch (newProductHook.states.requestState) {
 
       case RequestState.Pending:
         return <Spinner animation="grow" variant="light" size="sm" />;
@@ -108,18 +84,18 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
   };
 
   return (
-    <ListGroupItem action>
+    <ListGroup.Item action as="li">
       <Form.Group className="d-flex flex-wrap mb-0">
         <Col sm="3">
           <Form.Control 
             type="text" 
             placeholder="Identifiant EBP" 
             size="sm"
-            readOnly={requestState !== RequestState.Idle || alreadyAdded}
-            value={ebpId}
-            onChange={handleEbpIdChange}
-            isValid={isValid}
-            isInvalid={isValid === false}
+            readOnly={newProductHook.states.requestState !== RequestState.Idle || alreadyAdded}
+            value={newProductHook.states.ebpId}
+            onChange={newProductHook.eventHandlers.handleEbpIdChange}
+            isValid={newProductHook.states.isValid}
+            isInvalid={newProductHook.states.isValid === false}
           />
         </Col>
         <Col sm="3">
@@ -128,22 +104,22 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
             custom
             size="sm"
             disabled={alreadyAdded}
-            value={shelf?.id || ''}
-            onChange={handleShelfChange}
-            isInvalid={submitted && typeof shelf === 'undefined'}
+            value={newProductHook.states.shelf?.id || ''}
+            onChange={newProductHook.eventHandlers.handleShelfChange}
+            isInvalid={newProductHook.states.submitted && typeof newProductHook.states.shelf === 'undefined'}
           >
             <option value="">Choisissez un rayon…</option>
             {shelves.map( ({ id, name }) =>
-              <option value={id}>{name}</option>
+              <option key={id} value={id}>{name}</option>
             )}
           </Form.Control>
         </Col>
         <Button
           className="mr-2"
-          variant={alreadyAdded ? 'secondary' : requestState === RequestState.Success ? 'success' : 'primary'}
-          disabled={requestState !== RequestState.Idle || alreadyAdded}
+          variant={alreadyAdded ? 'secondary' : newProductHook.states.requestState === RequestState.Success ? 'success' : 'primary'}
+          disabled={newProductHook.states.requestState !== RequestState.Idle || alreadyAdded}
           size="sm"
-          onClick={requestState === RequestState.Idle && !alreadyAdded ? sendGame : undefined}
+          onClick={handleAddButtonClick}
         >
           {makeButtonContent()}
         </Button>
@@ -151,7 +127,7 @@ const BoardGameItem: FC<BoardGameItemProps> = ({ boardGame }) => {
           {boardGame.name}
         </span>
       </Form.Group>
-    </ListGroupItem>
+    </ListGroup.Item>
   );
 }
 
