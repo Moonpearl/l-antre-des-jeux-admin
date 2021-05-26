@@ -37,6 +37,8 @@ const handler = async (event) => {
       }
     );
 
+    const slug = handle.split('-').filter(item => item !== '').join('-');
+
     const { createProduct } = await graphcms.request(
       `mutation createGame(
         $ebpName: String,
