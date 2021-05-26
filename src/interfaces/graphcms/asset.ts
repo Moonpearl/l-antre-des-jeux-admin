@@ -1,4 +1,5 @@
 export default interface Asset {
   id: string;
-  boardgameatlasId: string;
+  slug: string;
+  boardgameatlasId?: string;
 }

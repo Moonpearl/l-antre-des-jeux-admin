@@ -1,17 +1,20 @@
 import React from 'react';
-import { EbpImport, GameSearch } from './pages';
+import { EbpImport, GameAdd, GameSearch } from './pages';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { InitialLoader } from './components';
 import { EbpContextProvider } from './contexts/ebp-context';
+import { GraphcmsContextProvider } from './contexts/graphcms-context';
 
 const App = () => (
   <InitialLoader>
-    <EbpContextProvider>
-      <EbpImport />
-      <GameSearch />
-    </EbpContextProvider>
-
+    <GraphcmsContextProvider>
+      <EbpContextProvider>
+        <EbpImport />
+        <GameAdd />
+        <GameSearch />
+      </EbpContextProvider>
+    </GraphcmsContextProvider>
   </InitialLoader>
 );
 
