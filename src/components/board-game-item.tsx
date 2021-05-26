@@ -4,9 +4,6 @@ import { GraphcmsContext, SearchContext } from "../contexts";
 import { RequestState } from "../enums";
 import { useNewProduct } from "../hooks";
 import { BoardGame } from "../interfaces/boardgameatlas";
-import { EbpProduct } from "../interfaces/ebp";
-
-
 
 interface BoardGameItemProps {
   boardGame: BoardGame;
