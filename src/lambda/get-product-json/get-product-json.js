@@ -47,7 +47,7 @@ const handler = async (event) => {
         url: `/.netlify/functions/get-product-json?slug=${slug}`,
         id: product.ebpId,
         name: product.name,
-        price: productVariants.length === 0 ? product.price : undefined,
+        price: product.price,
         image: product.imageUrl,
         stock: product.lastReportedStock,
         description: product.description,
