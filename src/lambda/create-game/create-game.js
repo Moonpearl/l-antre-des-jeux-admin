@@ -9,7 +9,7 @@ const handler = async (event) => {
   try {
     const {
       boardgameatlasId,
-      slug,
+      slug: handle,
       name,
       description,
       price,
