@@ -1,5 +1,52 @@
-const { GraphQLClient } = require('graphql-request');
+const { GraphQLClient, gql } = require('graphql-request');
 const TurndownService = require('turndown');
+
+const createGameQuery = gql`
+  mutation createGame(
+    $ebpName: String,
+    $name: String,
+    $slug: String!,
+    $boardgameatlasId: String,
+    $ebpId: String!,
+    $description: String,
+    $price: Float!,
+    $imageUrl: String,
+    $minPlaytime: Int,
+    $maxPlaytime: Int,
+    $minPlayers: Int,
+    $maxPlayers: Int,
+    $minAge: Int,
+    $lastReportedStock: Int,
+    $mechanics: [MechanicWhereUniqueInput!],
+    $categories: [CategoryWhereUniqueInput!],
+    $variants: [ProductVariantCreateInput!],
+    $shelf: ShelfWhereUniqueInput!
+  ) {
+    createProduct(data: {localizations: {create: {data: {
+        name: $name,
+        description: $description
+      }, locale: en}},
+      name: $ebpName,
+      slug: $slug,
+      boardgameatlasId: $boardgameatlasId,
+      ebpId: $ebpId,
+      price: $price,
+      imageUrl: $imageUrl,
+      minPlaytime: $minPlaytime,
+      maxPlaytime: $maxPlaytime,
+      minPlayers: $minPlayers,
+      maxPlayers: $maxPlayers,
+      minAge: $minAge,
+      lastReportedStock: $lastReportedStock,
+      mechanics: {connect: $mechanics},
+      categories: {connect: $categories},
+      productVariants: {create: $variants},
+      shelf: {connect: $shelf}
+    }) {
+      id
+    }
+  }
+`;
 
 const handler = async (event) => {
   const { GRAPHCMS_ENDPOINT, GRAPHCMS_MUTATION_TOKEN } = process.env;
@@ -40,50 +87,7 @@ const handler = async (event) => {
     const slug = handle.split('-').filter(item => item !== '').join('-');
 
     const { createProduct } = await graphcms.request(
-      `mutation createGame(
-        $ebpName: String,
-        $name: String,
-        $slug: String!,
-        $boardgameatlasId: String,
-        $ebpId: String!,
-        $description: String,
-        $price: Float,
-        $imageUrl: String,
-        $minPlaytime: Int,
-        $maxPlaytime: Int,
-        $minPlayers: Int,
-        $maxPlayers: Int,
-        $minAge: Int,
-        $lastReportedStock: Int,
-        $mechanics: [MechanicWhereUniqueInput!],
-        $categories: [CategoryWhereUniqueInput!],
-        $variants: [ProductVariantCreateInput!],
-        $shelf: ShelfWhereUniqueInput!
-      ) {
-        createProduct(data: {localizations: {create: {data: {
-            name: $name,
-            description: $description
-          }, locale: en}},
-          name: $ebpName,
-          slug: $slug,
-          boardgameatlasId: $boardgameatlasId,
-          ebpId: $ebpId,
-          price: $price,
-          imageUrl: $imageUrl,
-          minPlaytime: $minPlaytime,
-          maxPlaytime: $maxPlaytime,
-          minPlayers: $minPlayers,
-          maxPlayers: $maxPlayers,
-          minAge: $minAge,
-          lastReportedStock: $lastReportedStock,
-          mechanics: {connect: $mechanics},
-          categories: {connect: $categories},
-          productVariants: {create: $variants},
-          shelf: {connect: $shelf}
-        }) {
-          id
-        }
-      }`,
+      createGameQuery,
       {
         name,
         slug,
