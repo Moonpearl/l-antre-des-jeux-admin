@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { createContext, FC, useEffect, useState } from "react";
-import { Alert } from "react-bootstrap";
+import { Alert, Container } from "react-bootstrap";
 import { GraphcmsShelf } from "../interfaces/graphcms";
 
 interface GraphcmsContextValue {
@@ -31,7 +31,14 @@ export const GraphcmsContextProvider: FC = ({ children }) => {
 
   return (
     <GraphcmsContext.Provider value={value}>
-      {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+      {errorMessage && (
+        <Container>
+          <Alert variant="danger">
+            <Alert.Heading>Impossible de récupérer les données depuis GraphCMS.</Alert.Heading>
+            <p>{errorMessage}</p>
+          </Alert>
+        </Container>
+      )}
       {children}
     </GraphcmsContext.Provider>
   );

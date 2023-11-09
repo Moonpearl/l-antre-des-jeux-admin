@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FC, FormEventHandler, useContext, useState } from "react";
-import { Alert, Button, Container, Form, Spinner } from "react-bootstrap";
+import { Accordion, AccordionCollapse, AccordionToggle, Alert, Button, Card, Container, Form, Spinner } from "react-bootstrap";
 import { EbpContext } from "../contexts";
 import { RequestState } from "../enums";
 
@@ -86,8 +86,39 @@ const EbpImport: FC = () => {
     <Container>
       <h1 className="mt-4 mb-4">Importer les données d'EBP</h1>
       <p>
-        Cette page permet d'importer les données exportées du logiciel EBP, afin de mettre à jour les stocks et les prix des produits.
+        Cette page permet d'importer les données exportées du logiciel EBP, afin de mettre à jour les stocks des produits dans GraphCMS.
       </p>
+
+      <Accordion>
+        <Card>
+          <Card.Header>
+            <AccordionToggle as={Button} variant="link" eventKey="0">Structure attendue</AccordionToggle>
+            <AccordionCollapse eventKey="0">
+              <Card.Body>
+                <p>
+                  La structure attendue de l'export EBP est la suivante:
+                </p>
+                <ol>
+                  <li>Identifiant EBP</li>
+                  <li>Nom du produit</li>
+                  <li>Famille du produit</li>
+                  <li>Fournisseur</li>
+                  <li>Code-barres</li>
+                  <li>Stock*</li>
+                  <li>Prix d'achat*</li>
+                  <li>Prix*</li>
+                  <li>Taux de TVA*</li>
+                  <li>Type de produit</li>
+                </ol>
+                <p>
+                  Note: les colonnes annotées d'une astérisque (*) doivent être sous forme numérique.
+                </p>
+              </Card.Body>
+            </AccordionCollapse>
+          </Card.Header>
+        </Card>
+      </Accordion>
+
       <Form className="mb-4" onSubmit={handleSubmit}>
         <Form.Group>
           <Form.File
@@ -104,7 +135,7 @@ const EbpImport: FC = () => {
             custom
             type="checkbox"
             id="update-stocks"
-            label="Mettre à jour les stocks de tous les produits actuellement enregistrés dans Snipcart"
+            label="Mettre à jour également les stocks dans Snipcart."
             checked={updateStocks}
             onChange={event => setUpdateStocks(event.target.checked)}
           />

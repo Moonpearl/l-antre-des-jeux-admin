@@ -3,8 +3,6 @@ const axios = require('axios');
 const handler = async (event) => {
   const { id, stock } = JSON.parse(event.body);
 
-  console.log(id, stock);
-
   const { SNIPCART_SECRET_API_KEY } = process.env;
 
   try {

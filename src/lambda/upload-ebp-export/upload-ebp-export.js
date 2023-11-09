@@ -13,7 +13,7 @@ const handler = async (event) => {
   // TODO Fix source file encoding issue
   const decoder = new StringDecoder('latin1');
   const parsed = Papa.parse(decoder.write(file.content));
-  const headers = parsed.data.shift();
+  const _headers = parsed.data.shift();
 
   const result = parsed.data.map(item => ({
     ebpId: item[0],
