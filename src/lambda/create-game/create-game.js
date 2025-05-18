@@ -1,48 +1,53 @@
-const { GraphQLClient, gql } = require('graphql-request');
-const TurndownService = require('turndown');
+const { GraphQLClient, gql } = require("graphql-request");
+const TurndownService = require("turndown");
 
 const createGameQuery = gql`
   mutation createGame(
-    $ebpName: String,
-    $name: String,
-    $slug: String!,
-    $boardgameatlasId: String,
-    $ebpId: String!,
-    $description: String,
-    $price: Float!,
-    $imageUrl: String,
-    $minPlaytime: Int,
-    $maxPlaytime: Int,
-    $minPlayers: Int,
-    $maxPlayers: Int,
-    $minAge: Int,
-    $lastReportedStock: Int,
-    $mechanics: [MechanicWhereUniqueInput!],
-    $categories: [CategoryWhereUniqueInput!],
-    $variants: [ProductVariantCreateInput!],
+    $ebpName: String
+    $name: String
+    $slug: String!
+    $boardgameatlasId: String
+    $ebpId: String!
+    $description: String
+    $price: Float!
+    $imageUrl: String
+    $minPlaytime: Int
+    $maxPlaytime: Int
+    $minPlayers: Int
+    $maxPlayers: Int
+    $minAge: Int
+    $lastReportedStock: Int
+    $mechanics: [MechanicWhereUniqueInput!]
+    $categories: [CategoryWhereUniqueInput!]
+    $variants: [ProductVariantCreateInput!]
     $shelf: ShelfWhereUniqueInput!
   ) {
-    createProduct(data: {localizations: {create: {data: {
-        name: $name,
-        description: $description
-      }, locale: en}},
-      name: $ebpName,
-      slug: $slug,
-      boardgameatlasId: $boardgameatlasId,
-      ebpId: $ebpId,
-      price: $price,
-      imageUrl: $imageUrl,
-      minPlaytime: $minPlaytime,
-      maxPlaytime: $maxPlaytime,
-      minPlayers: $minPlayers,
-      maxPlayers: $maxPlayers,
-      minAge: $minAge,
-      lastReportedStock: $lastReportedStock,
-      mechanics: {connect: $mechanics},
-      categories: {connect: $categories},
-      productVariants: {create: $variants},
-      shelf: {connect: $shelf}
-    }) {
+    createProduct(
+      data: {
+        localizations: {
+          create: {
+            data: { name: $name, description: $description }
+            locale: en
+          }
+        }
+        name: $ebpName
+        slug: $slug
+        boardgameatlasId: $boardgameatlasId
+        ebpId: $ebpId
+        price: $price
+        imageUrl: $imageUrl
+        minPlaytime: $minPlaytime
+        maxPlaytime: $maxPlaytime
+        minPlayers: $minPlayers
+        maxPlayers: $maxPlayers
+        minAge: $minAge
+        lastReportedStock: $lastReportedStock
+        mechanics: { connect: $mechanics }
+        categories: { connect: $categories }
+        productVariants: { create: $variants }
+        shelf: { connect: $shelf }
+      }
+    ) {
       id
     }
   }
@@ -75,49 +80,57 @@ const handler = async (event) => {
       shelf,
     } = JSON.parse(event.body);
 
-    const graphcms = new GraphQLClient(
-      GRAPHCMS_ENDPOINT,
-      {
-        headers: {
-          authorization: `Bearer ${GRAPHCMS_MUTATION_TOKEN}`,
-        }
-      }
-    );
+    const graphcms = new GraphQLClient(GRAPHCMS_ENDPOINT, {
+      headers: {
+        authorization: `Bearer ${GRAPHCMS_MUTATION_TOKEN}`,
+      },
+    });
 
-    const slug = handle.split('-').filter(item => item !== '').join('-');
+    const slug = handle
+      .split("-")
+      .filter((item) => item !== "")
+      .join("-");
 
-    const { createProduct } = await graphcms.request(
-      createGameQuery,
-      {
+    const { createProduct } = await graphcms.request(createGameQuery, {
+      name,
+      slug,
+      boardgameatlasId,
+      ebpId,
+      ebpName,
+      description: turndownService.turndown(description),
+      price: Number(price),
+      imageUrl,
+      minPlayers,
+      maxPlayers,
+      minPlaytime,
+      maxPlaytime,
+      minAge,
+      lastReportedStock,
+      mechanics: mechanics.map((mechanic) => ({
+        boardgameatlasId: mechanic.id,
+      })),
+      categories: categories.map((category) => ({
+        boardgameatlasId: category.id,
+      })),
+      variants: variants.map(({ name, priceModifier }) => ({
         name,
-        slug,
-        boardgameatlasId,
-        ebpId,
-        ebpName,
-        description: turndownService.turndown(description),
-        price: Number(price),
-        imageUrl,
-        minPlayers,
-        maxPlayers,
-        minPlaytime,
-        maxPlaytime,
-        minAge,
-        lastReportedStock,
-        mechanics: mechanics.map(mechanic => ({ boardgameatlasId: mechanic.id })),
-        categories: categories.map(category => ({ boardgameatlasId: category.id })),
-        variants: variants.map(({ name, priceModifier }) => ({ name, priceModifier })),
-        shelf: { id: shelf.id },
-      }
-    );
+        priceModifier,
+      })),
+      shelf: { id: shelf.id },
+    });
 
     return {
       statusCode: 201,
+      "Content-Type": "application/json",
       body: JSON.stringify(createProduct),
     };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      "Content-Type": "application/json",
+      body: error.toString(),
+    };
   }
-  catch (error) {
-    return { statusCode: 500, body: error.toString() };
-  }
-}
+};
 
 module.exports = { handler };

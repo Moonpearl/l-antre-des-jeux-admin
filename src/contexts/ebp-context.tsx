@@ -7,6 +7,7 @@ import { SnipcartCollection, SnipcartProduct } from "../interfaces/snipcart";
 interface StockUpdateState {
   currentId: string;
   processedCount: number;
+  errorCount: number;
   totalCount: number;
 }
 
@@ -34,37 +35,40 @@ const EbpContext = createContext<EbpContextValue>(defaultValue);
 
 export const EbpContextProvider: FC = ({ children }) => {
   const [products, setProducts] = useState<EbpProduct[]>([]);
-  const [requestState, setRequestState] = useState<RequestState>(RequestState.Idle);
+  const [requestState, setRequestState] = useState<RequestState>(
+    RequestState.Idle
+  );
   const [updateStocks, setUpdateStocks] = useState(false);
-  const [stockUpdateState, setStockUpdateState] = useState<StockUpdateState | undefined>();
+  const [stockUpdateState, setStockUpdateState] = useState<
+    StockUpdateState | undefined
+  >();
 
   const findById = (id: string) => {
-    if (id === '') return undefined;
-    return products.find(product => product.ebpId === id);
+    if (id === "") return undefined;
+    return products.find((product) => product.ebpId === id);
   };
 
   const uploadEbpExport = async (file: File) => {
     const formData = new FormData();
 
-    formData.append('file', file);
+    formData.append("file", file);
 
     setRequestState(RequestState.Pending);
 
     // Parse EBP export file and retrieve a list of all products
     try {
       const response = await axios.post<EbpProduct[]>(
-        '/.netlify/functions/upload-ebp-export',
+        "/.netlify/functions/upload-ebp-export",
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
           },
         }
       );
       setRequestState(RequestState.Success);
       setProducts(response.data);
-    }
-    catch (error) {
+    } catch (error) {
       setRequestState(RequestState.Failed);
     }
   };
@@ -78,24 +82,26 @@ export const EbpContextProvider: FC = ({ children }) => {
         }
 
         setStockUpdateState({
-          currentId: '',
+          currentId: "",
           processedCount: 0,
+          errorCount: 0,
           totalCount: 0,
         });
 
         // Get a list of all Snipcart products
         const response = await axios.get<SnipcartCollection<SnipcartProduct>>(
-          '/.netlify/functions/get-snipcart-products'
+          "/.netlify/functions/get-snipcart-products"
         );
-        
+
         // If no products were found, abort
         if (response.data.totalItems === 0) {
           return;
         }
 
         // Update stock for each Snipcart product individually
-        let currentId = '';
+        let currentId = "";
         let processedCount = 0;
+        let errorCount = 0;
         const totalCount = response.data.totalItems;
 
         const snipcartProducts = response.data.items;
@@ -107,25 +113,40 @@ export const EbpContextProvider: FC = ({ children }) => {
             setStockUpdateState({
               currentId,
               processedCount,
+              errorCount,
               totalCount,
             });
 
             const ebpProduct = findById(currentId);
 
-            if (typeof ebpProduct === 'undefined') {
-              throw new Error(`Product ${currentId} (${snipcartProduct.name}) does not exist in EBP export.`);
+            if (typeof ebpProduct === "undefined") {
+              throw new Error(
+                `Product ${currentId} (${snipcartProduct.name}) does not exist in EBP export.`
+              );
             }
 
-            await axios.put('/.netlify/functions/update-snipcart-product', { id: currentId, stock: ebpProduct.stock });
-            processedCount += 1;
-          }
-          catch (error) {
+            const promises = [
+              axios.put("/.netlify/functions/update-snipcart-product", {
+                id: currentId,
+                stock: ebpProduct.stock,
+              }),
+              axios.put("/.netlify/functions/update-game", {
+                ebpId: currentId,
+                lastReportedStock: ebpProduct.stock,
+              }),
+            ];
+
+            await Promise.all(promises);
+          } catch (error) {
             console.error(error);
+            errorCount += 1;
+          } finally {
+            processedCount += 1;
           }
         }
 
         setStockUpdateState(undefined);
-      }
+      };
       update();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,11 +163,7 @@ export const EbpContextProvider: FC = ({ children }) => {
     setUpdateStocks,
   };
 
-  return (
-    <EbpContext.Provider value={value}>
-      {children}
-    </EbpContext.Provider>
-  );
-}
+  return <EbpContext.Provider value={value}>{children}</EbpContext.Provider>;
+};
 
 export default EbpContext;
