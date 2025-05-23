@@ -21,7 +21,7 @@ const handler = async (event) => {
     family: item[2],
     provider: item[3],
     barCode: item[4],
-    stock: parsePrice(item[5]),
+    stock: Math.max(0, parsePrice(item[5])),
     buyingPrice: parsePrice(item[6]),
     price: parsePrice(item[7]),
     taxRate: parsePrice(item[8]),
